@@ -83,17 +83,32 @@ def puzzle35():
       elif path[0] == 'R': w_pos[0] += val
       locs.append({'start': tuple(start_pos), 'end': tuple(w_pos), 'steps': step_count, 'dir': path[0]})
       step_count += val
-  w_overlaps = []
-  for line1, line2 in itertools.product(w1_locs, w2_locs):
-    pt = line_intersection((line1['start'], line1['end']), (line2['start'], line2['end']))
-    if (pt or [0,0]) == [0,0]: continue # skip
-    if   line1['dir'] in ('U','D'): l1_dtoi = abs(line1['start'][1] - pt[1])
-    elif line1['dir'] in ('L','R'): l1_dtoi = abs(line1['start'][0] - pt[0])
-    if   line2['dir'] in ('U','D'): l2_dtoi = abs(line2['start'][1] - pt[1])
-    elif line2['dir'] in ('L','R'): l2_dtoi = abs(line2['start'][0] - pt[0])
-    total_steps = line1['steps'] + line2['steps'] + l1_dtoi + l2_dtoi
-    w_overlaps.append(total_steps)
-  w_overlaps = sorted(list(set(w_overlaps)))
+
+  # LONG
+  # w_overlaps = []
+  # for line1, line2 in itertools.product(w1_locs, w2_locs):
+  #   if (pt or [0,0]) == [0,0]: continue # skip
+  #   if   line1['dir'] in ('U','D'): l1_dtoi = abs(line1['start'][1] - pt[1])
+  #   elif line1['dir'] in ('L','R'): l1_dtoi = abs(line1['start'][0] - pt[0])
+  #   if   line2['dir'] in ('U','D'): l2_dtoi = abs(line2['start'][1] - pt[1])
+  #   elif line2['dir'] in ('L','R'): l2_dtoi = abs(line2['start'][0] - pt[0])
+  #   total_steps = line1['steps'] + line2['steps'] + l1_dtoi + l2_dtoi
+  #   w_overlaps.append(total_steps)
+
+  # Comprehension
+  w_overlaps = sorted(list(set([sum([abs((line['start'][1] - pt[1]) if line['dir'] in ('U','D') else (line['start'][0] - pt[0])) + line['steps'] for line in (line1, line2)]) for line1, line2 in itertools.product(w1_locs, w2_locs) if ((pt := line_intersection((line1['start'], line1['end']), (line2['start'], line2['end']))) or [0,0] != [0,0])])))
+
+  # Comprehension (expanded)
+  # w_overlaps = sorted(list(set(
+  #   [
+  #     sum([
+  #       abs((line['start'][1] - pt[1]) if line['dir'] in ('U','D') else (line['start'][0] - pt[0])) + line['steps']
+  #         for line in (line1, line2)
+  #     ])
+  #     for line1, line2 in itertools.product(w1_locs, w2_locs)
+  #     if (pt := line_intersection((line1['start'], line1['end']), (line2['start'], line2['end']))) or [0,0] != [0,0]
+  #   ]
+  # )))
   print(f"Puzzle 3.5: Fewest steps is {w_overlaps[0]}")
 
 ############
@@ -138,8 +153,8 @@ def puzzle5():
   ptr = 0
   output = []
   while ptr < len(values):
-    opcode = int(str(values[ptr])[-2:])                   # two rightmost digits
     modes = [int(c) for c in str(values[ptr])[:-2]][::-1] # all leftmost digits (right-to-left) # rightmost is last param
+    opcode = int(str(values[ptr])[-2:])                   # two rightmost digits
     if   opcode == 99: break
     elif opcode == 1: update_value(3, get_param(1) + get_param(2)); ptr += 4
     elif opcode == 2: update_value(3, get_param(1) * get_param(2)); ptr += 4
@@ -150,12 +165,11 @@ def puzzle5():
 ## 5.5 ##
 def puzzle55():
   with open('d5_input.txt', 'r') as f: values = [int(v) for v in f.readlines()[0].strip().split(',')]
-  vpos = lambda midx: values[ptr+midx] if get(modes, midx-1, 0) == 0 else ptr+midx # given a mode index, calculates the proper position to index into values
+  vpos = lambda m_idx: values[ptr+m_idx] if get(modes, m_idx-1, 0) == 0 else ptr+m_idx # given a mode index, calculate the proper position for indexing into values
   ptr = 0
   while ptr < len(values):
-    opcode = int(str(values[ptr])[-2:])                   # two rightmost digits
-    modes = [int(c) for c in str(values[ptr])[:-2]][::-1] # all leftmost digits (right-to-left) # rightmost is last param
-    if   opcode == 99: break
+    modes = [int(c) for c in str(values[ptr])[:-2]][::-1]   # all leftmost digits (right-to-left) # rightmost is last param
+    if  (opcode := int(str(values[ptr])[-2:])) == 99: break # two rightmost digits
     elif opcode == 1: values[vpos(3)] = values[vpos(1)] + values[vpos(2)]; ptr += 4
     elif opcode == 2: values[vpos(3)] = values[vpos(1)] * values[vpos(2)]; ptr += 4
     elif opcode == 3: values[vpos(1)] = int(input("Input (P5.5): ")); ptr += 2
