@@ -33,3 +33,10 @@ def line_intersection(line1, line2):
 
 def manhattan(pt1, pt2):
   return abs(pt1[0]-pt2[0]) + abs(pt1[1]-pt2[1])
+
+# https://stackoverflow.com/questions/5125619/why-doesnt-list-have-safe-get-method-like-dictionary
+def safe_list_get (l, idx, default):
+  try:
+    return l[idx]
+  except IndexError:
+    return default
