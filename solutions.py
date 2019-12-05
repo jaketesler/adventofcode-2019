@@ -139,133 +139,46 @@ def puzzle45():
 def puzzle5():
   with open('d5_input.txt', 'r') as f: values = [int(v) for v in f.readlines()[0].strip().split(',')]
   ptr = 0
-  param_mode = 0
-  cur_input = 0
   output = []
+
   while ptr < len(values):
-
     opcode = int(str(values[ptr])[-2:]) # two rightmost digits
-    modes = [int(c) for c in str(values[ptr])[:-2]] # all leftmost digits (right-to-left) # rightmost is first param
-    modes.reverse() # all leftmost digits (right-to-left) # rightmost is last param
+    modes = [int(c) for c in str(values[ptr])[:-2]][::-1] # all leftmost digits (right-to-left) # rightmost is last param
+    get_param = lambda idx: values[values[ptr+idx]] if safe_list_get(modes, idx-1, 0) == 0 else values[ptr+idx]
+    def update_value(idx, value):
+      if safe_list_get(modes, idx-1, 0) == 0: values[values[ptr+idx]] = value # send to pointer
+      else: values[ptr+idx] = value
 
-    if opcode == 99: break
-
-    elif opcode == 1:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      param2 = values[values[ptr+2]] if safe_list_get(modes, 1, 0) == 0 else values[ptr+2]
-
-      if safe_list_get(modes, 2, 0) == 0: # send to pointer
-        values[values[ptr+3]] = param1 + param2
-      else:
-        values[ptr+3] = param1 + param2
-      ptr += 4
-
-    elif opcode == 2:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      param2 = values[values[ptr+2]] if safe_list_get(modes, 1, 0) == 0 else values[ptr+2]
-
-      if safe_list_get(modes, 2, 0) == 0: # send to pointer
-        values[values[ptr+3]] = param1 * param2
-      else:
-        values[ptr+3] = param1 * param2
-      ptr += 4
-
-    elif opcode == 3:
-      cur_input = int(input("Input: "))
-      if safe_list_get(modes, 2, 0) == 0: # send to pointer
-        values[values[ptr+1]] = cur_input
-      else:
-        values[ptr+1] = cur_input
-      ptr += 2
-
-    elif opcode == 4:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      output.append(param1)
-      ptr += 2
-
+    if   opcode == 99: break
+    elif opcode == 1: update_value(3, get_param(1) + get_param(2)); ptr += 4
+    elif opcode == 2: update_value(3, get_param(1) * get_param(2)); ptr += 4
+    elif opcode == 3: update_value(1, int(input("Input (P5): ")));  ptr += 2
+    elif opcode == 4: output.append(get_param(1)); ptr += 2
   print("Puzzle 5: {}".format(f'All tests passed! Output: {output[-1]}' if not any(output[:-1]) else f'Tests failed: {output=}'))
 
 ## 5.5 ##
 def puzzle55():
   with open('d5_input.txt', 'r') as f: values = [int(v) for v in f.readlines()[0].strip().split(',')]
   ptr = 0
-  param_mode = 0
-  cur_input = 0
   output = []
+
   while ptr < len(values):
-
     opcode = int(str(values[ptr])[-2:]) # two rightmost digits
-    modes = [int(c) for c in str(values[ptr])[:-2]] # all leftmost digits (right-to-left) # rightmost is first param
-    modes.reverse() # all leftmost digits (right-to-left) # rightmost is last param
+    modes = [int(c) for c in str(values[ptr])[:-2]][::-1] # all leftmost digits (right-to-left) # rightmost is last param
+    get_param = lambda idx: values[values[ptr+idx]] if safe_list_get(modes, idx-1, 0) == 0 else values[ptr+idx]
+    def update_value(idx, value):
+      if safe_list_get(modes, idx-1, 0) == 0: values[values[ptr+idx]] = value # send to pointer
+      else: values[ptr+idx] = value
 
-    if opcode == 99: break
-
-    elif opcode == 1:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      param2 = values[values[ptr+2]] if safe_list_get(modes, 1, 0) == 0 else values[ptr+2]
-
-      if safe_list_get(modes, 2, 0) == 0: # send to pointer
-        values[values[ptr+3]] = param1 + param2
-      else:
-        values[ptr+3] = param1 + param2
-      ptr += 4
-
-    elif opcode == 2:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      param2 = values[values[ptr+2]] if safe_list_get(modes, 1, 0) == 0 else values[ptr+2]
-
-      if safe_list_get(modes, 2, 0) == 0: # send to pointer
-        values[values[ptr+3]] = param1 * param2
-      else:
-        values[ptr+3] = param1 * param2
-      ptr += 4
-
-    elif opcode == 3:
-      cur_input = int(input("Input: "))
-      if safe_list_get(modes, 2, 0) == 0: # send to pointer
-        values[values[ptr+1]] = cur_input
-      else:
-        values[ptr+1] = cur_input
-      ptr += 2
-
-    elif opcode == 4:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      output.append(param1)
-      ptr += 2
-
-    elif opcode == 5:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      param2 = values[values[ptr+2]] if safe_list_get(modes, 1, 0) == 0 else values[ptr+2]
-      if param1 != 0: ptr = param2 # do not update ptr automatically
-      else: ptr += 3
-
-
-    elif opcode == 6:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      param2 = values[values[ptr+2]] if safe_list_get(modes, 1, 0) == 0 else values[ptr+2]
-      if param1 == 0: ptr = param2 # do not update ptr automatically
-      else: ptr += 3
-
-    elif opcode == 7:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      param2 = values[values[ptr+2]] if safe_list_get(modes, 1, 0) == 0 else values[ptr+2]
-      # if safe_list_get(modes, 2, 0) == 0: # send to pointer
-      values[values[ptr+3]] = int(param1 < param2)
-      # else:
-        # values[ptr+3] = int(param1 < param2)
-      ptr += 4
-
-    elif opcode == 8:
-      param1 = values[values[ptr+1]] if safe_list_get(modes, 0, 0) == 0 else values[ptr+1]
-      param2 = values[values[ptr+2]] if safe_list_get(modes, 1, 0) == 0 else values[ptr+2]
-      # if safe_list_get(modes, 2, 0) == 0: # send to pointer
-      values[values[ptr+3]] = int(param1 == param2)
-      # else:
-        # values[ptr+3] = int(param1 == param2)
-      ptr += 4
-
-
-
+    if   opcode == 99: break
+    elif opcode == 1: update_value(3, get_param(1) + get_param(2)); ptr += 4
+    elif opcode == 2: update_value(3, get_param(1) * get_param(2)); ptr += 4
+    elif opcode == 3: update_value(1, int(input("Input (P5.5): "))); ptr += 2
+    elif opcode == 4: output.append(get_param(1)); ptr += 2
+    elif opcode == 5: ptr = get_param(2) if get_param(1) != 0 else ptr+3
+    elif opcode == 6: ptr = get_param(2) if get_param(1) == 0 else ptr+3
+    elif opcode == 7: values[values[ptr+3]] = int(get_param(1) <  get_param(2)); ptr += 4
+    elif opcode == 8: values[values[ptr+3]] = int(get_param(1) == get_param(2)); ptr += 4
   print("Puzzle 5.5: {}".format(f'All tests passed! Output: {output[-1]}' if not any(output[:-1]) else f'Tests failed: {output=}'))
 
 ##########################
@@ -278,5 +191,5 @@ if __name__ == '__main__':
   # puzzle35()
   # puzzle4()
   # puzzle45()
-  # puzzle5()
+  puzzle5()
   puzzle55()
