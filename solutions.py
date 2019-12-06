@@ -186,92 +186,40 @@ def puzzle55():
 ## 6 ##
 def puzzle6():
   with open('d6_input.txt', 'r') as f: orbits = [l.strip() for l in f.readlines()]
-  # orbits = ["COM)B","B)C","C)D","D)E","E)F","B)G","G)H","D)I","E)J","J)K","K)L",]
-
-  all_centers = {}
-  for orbit in orbits:
-    center,satellite = orbit.split(')') # each satellite will only appear once
-    all_centers.setdefault(center, []).append(satellite)
-
-  all_orbits = {c: {} for c in all_centers.keys()}
-
-  for center, sats in all_centers.items():
-    for satellite in sats:
-      cur_COM = all_orbits[center].setdefault(satellite, {})
-      while (cur_COM := cur_COM.setdefault(satellite, {})): pass
-
-  for center, all_sats in all_orbits.items():
-    for csat, sats in all_sats.items():
-      all_orbits[center][csat] = all_orbits.get(csat, {})
-
-  all_orbits = {'COM': all_orbits['COM']}
-
-  def count(tree, num_levels_down=0):
-    if not tree: return 0
-    total_orbits = 0
-    for center, planets_in_orbit in tree.items():
-      cur_sub_orbits = count(planets_in_orbit, num_levels_down+1)
-      total_orbits += num_levels_down + cur_sub_orbits
-      # print(f"{center}, down: {num_levels_down}, {cur_sub_orbits=}, {total_orbits=}")
-    return total_orbits
-
-  total_orbits = count(all_orbits)
+  def count(tree, num_levels_down=0): return sum([num_levels_down+count(planets_in_orbit, num_levels_down+1) for center, planets_in_orbit in tree.items()])
+  orbits = list(map(lambda o: o.split(')'), orbits))
+  all_centers = {center: [s for c,s in orbits if c == center] for center,sat in orbits}
+  all_orbits = {c: {s: {} for s in s} for c,s in all_centers.items()}
+  for center, all_sats in all_orbits.items(): all_orbits[center].update({csat: all_orbits.get(csat, {}) for csat in all_sats.keys()})
+  total_orbits = count({'COM': all_orbits['COM']})
   print(f"Puzzle 6: Total direct+indirect orbits: {total_orbits}")
 
 ## 6.5 ##
 def puzzle65():
   with open('d6_input.txt', 'r') as f: orbits = [l.strip() for l in f.readlines()]
-  # orbits = ["COM)B","B)C","C)D","D)E","E)F","B)G","G)H","D)I","E)J","J)K","K)L","K)YOU","I)SAN",]
-
-  m_orbits = list(map(lambda o: o.split(')'), orbits))
-  all_centers = {center: [s for c,s in m_orbits if c == center] for center,sat in m_orbits}
-  all_orbits = {c: {s: {} for s in s} for c,s in all_centers.items()}
-
-  for center, all_sats in all_orbits.items():
-    for csat, sats in all_sats.items():
-      all_orbits[center][csat] = all_orbits.get(csat, {})
-
-  def count(tree, num_levels_down=0):
-    if not tree: return 0
-    total_orbits = 0
-    for center, planets_in_orbit in tree.items():
-      cur_sub_orbits = count(planets_in_orbit, num_levels_down+1)
-      total_orbits += num_levels_down + cur_sub_orbits
-    return total_orbits
-
-  def is_node_below(tree, key):
-    if not tree: return False
-    if key in tree.keys(): return True
-    return any([is_node_below(t, key) for t in tree.values()])
-
-  possibles = []
-  for center, all_sats in all_orbits.items():
-    if is_node_below(all_sats, 'YOU') and is_node_below(all_sats, 'SAN'):
-      possibles.append({center: all_sats})
-
-  def depth_of_node(tree, key, level=0):
-    if not tree: return 0
-    if key in tree: return level
-    return sum([depth_of_node(t, key, level+1) for t in tree.values()])
-
-  smallest_tree = sorted(possibles, key=lambda p: count(p))[0]
-  smallest_tree = smallest_tree[list(smallest_tree.keys())[0]]
-
-  num_transfers = depth_of_node(smallest_tree, 'YOU') + depth_of_node(smallest_tree, 'SAN')
-
-  print(f"Puzzle 6.5: Minimum orbital transfers: {num_transfers}")
+  def count(tree, num_levels_down=0): return sum([num_levels_down+count(planets_in_orbit, num_levels_down+1) for center, planets_in_orbit in tree.items()])
+  def depth_of_node(tree, key, level=0): return level if key in tree else sum([depth_of_node(t, key, level+1) for t in tree.values()])
+  orbits = list(map(lambda o: o.split(')'), orbits))
+  all_centers = {center: [s for c,s in orbits if c == center] for center,sat in orbits}
+  all_orbits  = {c: {s: {} for s in s} for c,s in all_centers.items()}
+  for center, all_sats in all_orbits.items(): all_orbits[center].update({csat: all_orbits.get(csat, {}) for csat in all_sats.keys()})
+  possibles = [{center: all_sats} for center, all_sats in all_orbits.items() if depth_of_node(all_sats, 'YOU') and depth_of_node(all_sats, 'SAN')]
+  all_possible_trees = sorted(possibles, key=lambda p: count(p))[0]
+  smallest_tree      = all_possible_trees[list(all_possible_trees.keys())[0]]
+  min_transfers = depth_of_node(smallest_tree, 'YOU') + depth_of_node(smallest_tree, 'SAN')
+  print(f"Puzzle 6.5: Minimum orbital transfers: {min_transfers}")
 
 ##########################
 if __name__ == '__main__':
-  # puzzle1()
-  # puzzle15()
-  # puzzle2()
-  # puzzle25()
-  # puzzle3()
-  # puzzle35()
-  # puzzle4()
-  # puzzle45()
-  # puzzle5()
-  # puzzle55()
+  puzzle1()
+  puzzle15()
+  puzzle2()
+  puzzle25()
+  puzzle3()
+  puzzle35()
+  puzzle4()
+  puzzle45()
+  puzzle5()
+  puzzle55()
   puzzle6()
   puzzle65()
