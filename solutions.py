@@ -180,15 +180,70 @@ def puzzle55():
     elif opcode == 8: values[values[ptr+3]] = int(values[vpos(1)] == values[vpos(2)]); ptr += 4
   print(f"Puzzle 5.5: Intcode output: {output}")
 
+############
+# puzzle 6 #
+############
+## 6 ##
+def puzzle6():
+  with open('d6_input.txt', 'r') as f: orbits = [l.strip() for l in f.readlines()]
+  # orbits = ["COM)B","B)C","C)D","D)E","E)F","B)G","G)H","D)I","E)J","J)K","K)L",]
+  all_planets = {}
+  all_centers = {}
+  for orbit in orbits:
+    center,satellite = orbit.split(')') # each satellite will only appear once
+    all_planets[satellite] = center
+    all_centers[center] = None
+  all_centers = list(all_centers.keys())
+
+  all_orbits = {c: [] for c in all_centers}
+  all_orbits_d = {c: {} for c in all_centers}
+
+  for satellite, center in all_planets.items():
+    all_orbits[center].append(satellite)
+
+
+  for center, sats in all_orbits.items():
+    for satellite in sats:
+      cur_COM = all_orbits_d[center]
+      while True:
+        if satellite in cur_COM:
+          cur_COM = cur_COM[satellite]
+        else:
+          cur_COM[satellite] = {}
+          break
+
+  for center, all_sats in all_orbits_d.items():
+    for csat, sats in all_sats.items():
+      all_orbits_d[center][csat] = all_orbits_d.get(csat, {})
+
+
+  all_orbits_d = {'COM': all_orbits_d['COM']}
+
+  def count(tree, cur_level=0):
+    if not tree: return 0
+    cur_value = 0
+    for center, planets_in_orbit in tree.items():
+      num_levels_down = cur_level
+      num_sub_orbits = count(planets_in_orbit, cur_level+1)
+      cur_value += num_levels_down + num_sub_orbits
+      # print(f"{center}, down: {cur_level}, {num_sub_orbits=}, {cur_value=}")
+    return cur_value
+
+  total_orbits = count(all_orbits_d)
+
+
+  print(f"Puzzle 6: Total direct+indirect orbits: {total_orbits}")
+
 ##########################
 if __name__ == '__main__':
-  puzzle1()
-  puzzle15()
-  puzzle2()
-  puzzle25()
-  puzzle3()
-  puzzle35()
-  puzzle4()
-  puzzle45()
-  puzzle5()
-  puzzle55()
+  # puzzle1()
+  # puzzle15()
+  # puzzle2()
+  # puzzle25()
+  # puzzle3()
+  # puzzle35()
+  # puzzle4()
+  # puzzle45()
+  # puzzle5()
+  # puzzle55()
+  puzzle6()
