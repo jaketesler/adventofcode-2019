@@ -187,9 +187,32 @@ def puzzle55():
 def puzzle6():
   with open('d6_input.txt', 'r') as f: orbits = [l.strip() for l in f.readlines()]
   def count(tree, num_levels_down=0): return sum([num_levels_down+count(planets_in_orbit, num_levels_down+1) for center, planets_in_orbit in tree.items()])
+  # def count(tree, num_levels_down=0):
+  #   return sum([
+  #     num_levels_down+count(planets_in_orbit, num_levels_down+1)
+  #     for center, planets_in_orbit in tree.items()
+  #   ])
   orbits = tuple(map(lambda o: o.split(')'), orbits))
   all_orbits = {center: {s: {} for s in [sat for c,sat in orbits if c == center]} for center,_ in orbits}
+  # all_orbits = {
+  #   center: {
+  #     s: {}
+  #     for s in [
+  #       sat
+  #       for c,sat in orbits
+  #       if c == center
+  #     ]
+  #   }
+  #   for center,_ in orbits
+  # }
   for center, all_sats in all_orbits.items(): all_orbits[center].update({sat: all_orbits.get(sat, {}) for sat in all_sats.keys()})
+  # for center, all_sats in all_orbits.items():
+  #   all_orbits[center].update(
+  #     {
+  #       sat: all_orbits.get(sat, {})
+  #       for sat in all_sats.keys()
+  #     }
+  #   )
   total_orbits = count({'COM': all_orbits['COM']})
   print(f"Puzzle 6: Total direct+indirect orbits: {total_orbits}")
 
@@ -198,10 +221,26 @@ def puzzle65():
   with open('d6_input.txt', 'r') as f: orbits = [l.strip() for l in f.readlines()]
   def count(tree, num_levels_down=0): return sum([num_levels_down+count(planets_in_orbit, num_levels_down+1) for center, planets_in_orbit in tree.items()])
   def depth_of_node(tree, key, level=0): return level if key in tree else sum([depth_of_node(t, key, level+1) for t in tree.values()])
+  # def depth_of_node(tree, key, level=0):
+  #   return level if key in tree else sum(
+  #     [
+  #       depth_of_node(t, key, level+1)
+  #       for t in tree.values()
+  #     ]
+  #   )
   orbits = tuple(map(lambda o: o.split(')'), orbits))
   all_orbits = {center: {s: {} for s in [sat for c,sat in orbits if c == center]} for center,_ in orbits}
   for center, all_sats in all_orbits.items(): all_orbits[center].update({sat: all_orbits.get(sat, {}) for sat in all_sats.keys()})
   smallest_tree = tuple(min([{center: all_sats} for center, all_sats in all_orbits.items() if depth_of_node(all_sats, 'YOU') and depth_of_node(all_sats, 'SAN')], key=lambda p: count(p)).values())[0]
+  # smallest_tree = tuple(
+  #   min(
+  #     [
+  #       {center: all_sats}
+  #       for center, all_sats in all_orbits.items()
+  #       if depth_of_node(all_sats, 'YOU') and depth_of_node(all_sats, 'SAN')
+  #     ], key=lambda p: count(p)
+  #   ).values()
+  # )[0]
   min_transfers = depth_of_node(smallest_tree, 'YOU') + depth_of_node(smallest_tree, 'SAN')
   print(f"Puzzle 6.5: Minimum orbital transfers: {min_transfers}")
 
