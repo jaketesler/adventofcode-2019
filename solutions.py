@@ -187,52 +187,79 @@ def puzzle55():
 def puzzle6():
   with open('d6_input.txt', 'r') as f: orbits = [l.strip() for l in f.readlines()]
   # orbits = ["COM)B","B)C","C)D","D)E","E)F","B)G","G)H","D)I","E)J","J)K","K)L",]
-  all_planets = {}
+
   all_centers = {}
   for orbit in orbits:
     center,satellite = orbit.split(')') # each satellite will only appear once
-    all_planets[satellite] = center
-    all_centers[center] = None
-  all_centers = list(all_centers.keys())
+    all_centers.setdefault(center, []).append(satellite)
 
-  all_orbits = {c: [] for c in all_centers}
-  all_orbits_d = {c: {} for c in all_centers}
+  all_orbits = {c: {} for c in all_centers.keys()}
 
-  for satellite, center in all_planets.items():
-    all_orbits[center].append(satellite)
-
-
-  for center, sats in all_orbits.items():
+  for center, sats in all_centers.items():
     for satellite in sats:
-      cur_COM = all_orbits_d[center]
-      while True:
-        if satellite in cur_COM:
-          cur_COM = cur_COM[satellite]
-        else:
-          cur_COM[satellite] = {}
-          break
+      cur_COM = all_orbits[center].setdefault(satellite, {})
+      while (cur_COM := cur_COM.setdefault(satellite, {})): pass
 
-  for center, all_sats in all_orbits_d.items():
+  for center, all_sats in all_orbits.items():
     for csat, sats in all_sats.items():
-      all_orbits_d[center][csat] = all_orbits_d.get(csat, {})
+      all_orbits[center][csat] = all_orbits.get(csat, {})
 
+  all_orbits = {'COM': all_orbits['COM']}
 
-  all_orbits_d = {'COM': all_orbits_d['COM']}
-
-  def count(tree, cur_level=0):
+  def count(tree, num_levels_down=0):
     if not tree: return 0
-    cur_value = 0
+    total_orbits = 0
     for center, planets_in_orbit in tree.items():
-      num_levels_down = cur_level
-      num_sub_orbits = count(planets_in_orbit, cur_level+1)
-      cur_value += num_levels_down + num_sub_orbits
-      # print(f"{center}, down: {cur_level}, {num_sub_orbits=}, {cur_value=}")
-    return cur_value
+      cur_sub_orbits = count(planets_in_orbit, num_levels_down+1)
+      total_orbits += num_levels_down + cur_sub_orbits
+      # print(f"{center}, down: {num_levels_down}, {cur_sub_orbits=}, {total_orbits=}")
+    return total_orbits
 
-  total_orbits = count(all_orbits_d)
-
-
+  total_orbits = count(all_orbits)
   print(f"Puzzle 6: Total direct+indirect orbits: {total_orbits}")
+
+## 6.5 ##
+def puzzle65():
+  with open('d6_input.txt', 'r') as f: orbits = [l.strip() for l in f.readlines()]
+  # orbits = ["COM)B","B)C","C)D","D)E","E)F","B)G","G)H","D)I","E)J","J)K","K)L","K)YOU","I)SAN",]
+
+  m_orbits = list(map(lambda o: o.split(')'), orbits))
+  all_centers = {center: [s for c,s in m_orbits if c == center] for center,sat in m_orbits}
+  all_orbits = {c: {s: {} for s in s} for c,s in all_centers.items()}
+
+  for center, all_sats in all_orbits.items():
+    for csat, sats in all_sats.items():
+      all_orbits[center][csat] = all_orbits.get(csat, {})
+
+  def count(tree, num_levels_down=0):
+    if not tree: return 0
+    total_orbits = 0
+    for center, planets_in_orbit in tree.items():
+      cur_sub_orbits = count(planets_in_orbit, num_levels_down+1)
+      total_orbits += num_levels_down + cur_sub_orbits
+    return total_orbits
+
+  def is_node_below(tree, key):
+    if not tree: return False
+    if key in tree.keys(): return True
+    return any([is_node_below(t, key) for t in tree.values()])
+
+  possibles = []
+  for center, all_sats in all_orbits.items():
+    if is_node_below(all_sats, 'YOU') and is_node_below(all_sats, 'SAN'):
+      possibles.append({center: all_sats})
+
+  def depth_of_node(tree, key, level=0):
+    if not tree: return 0
+    if key in tree: return level
+    return sum([depth_of_node(t, key, level+1) for t in tree.values()])
+
+  smallest_tree = sorted(possibles, key=lambda p: count(p))[0]
+  smallest_tree = smallest_tree[list(smallest_tree.keys())[0]]
+
+  num_transfers = depth_of_node(smallest_tree, 'YOU') + depth_of_node(smallest_tree, 'SAN')
+
+  print(f"Puzzle 6.5: Minimum orbital transfers: {num_transfers}")
 
 ##########################
 if __name__ == '__main__':
@@ -247,3 +274,4 @@ if __name__ == '__main__':
   # puzzle5()
   # puzzle55()
   puzzle6()
+  puzzle65()
