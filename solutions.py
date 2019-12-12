@@ -418,31 +418,32 @@ def puzzle10():
   ast_counts = {}
   for x,y in itertools.product(range(0, len(asteroids[0])), range(0, len(asteroids))):
     if not is_asteroid(asteroids[y][x]): continue
-    num_hits = 0
-    for dx,dy in itertools.product(range(0, len(asteroids[0])), range(0, len(asteroids))):
-      if dy == y and dx == x: continue
-      if is_asteroid(asteroids[dy][dx]) and can_see((x,y),(dx,dy)): num_hits += 1
-    ast_counts[f"{x}_{y}"] = num_hits
+    ast_counts[f"{x}_{y}"] = sum(
+      int(bool(
+        not (dy == y and dx == x) and
+        is_asteroid(asteroids[dy][dx]) and
+        can_see((x,y),(dx,dy))))
+      for dx,dy in itertools.product(range(0, len(asteroids[0])), range(0, len(asteroids))))
   print(f"Puzzle 10: Maximum detection from an asteroid: {max(ast_counts.values())}")
 
 ##########################
 if __name__ == '__main__':
-  # puzzle1()
-  # puzzle15()
-  # puzzle2()
-  # puzzle25()
-  # puzzle3()
-  # puzzle35()
-  # puzzle4()
-  # puzzle45()
-  # puzzle5()
-  # puzzle55()
-  # puzzle6()
-  # puzzle65()
-  # puzzle7()
-  # puzzle75()
-  # puzzle8()
-  # puzzle85()
-  # puzzle9()
-  # puzzle95()
+  puzzle1()
+  puzzle15()
+  puzzle2()
+  puzzle25()
+  puzzle3()
+  puzzle35()
+  puzzle4()
+  puzzle45()
+  puzzle5()
+  puzzle55()
+  puzzle6()
+  puzzle65()
+  puzzle7()
+  puzzle75()
+  puzzle8()
+  puzzle85()
+  puzzle9()
+  puzzle95()
   puzzle10()
