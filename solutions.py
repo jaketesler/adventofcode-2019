@@ -419,7 +419,7 @@ def puzzle9():
     if  (opcode := int(str(values[ptr])[-2:])) == 99: break # two rightmost digits
     elif opcode == 1: values[vpos(3)] = values.setdefault(vpos(1), 0) + values.setdefault(vpos(2), 0); ptr += 4
     elif opcode == 2: values[vpos(3)] = values.setdefault(vpos(1), 0) * values.setdefault(vpos(2), 0); ptr += 4
-    elif opcode == 3: values[vpos(1)] = int(input("Input (9): ")); ptr += 2
+    elif opcode == 3: values[vpos(1)] = int(input("Input (9): [1] ")); ptr += 2
     elif opcode == 4: output.append(values.setdefault(vpos(1), 0)); ptr += 2
     elif opcode == 5: ptr = values.setdefault(vpos(2), 0) if values.setdefault(vpos(1), 0) != 0 else ptr+3
     elif opcode == 6: ptr = values.setdefault(vpos(2), 0) if values.setdefault(vpos(1), 0) == 0 else ptr+3
@@ -427,6 +427,36 @@ def puzzle9():
     elif opcode == 8: values[vpos(3)] = int(values.setdefault(vpos(1), 0) == values.setdefault(vpos(2), 0)); ptr += 4
     elif opcode == 9: rel_base += values.setdefault(vpos(1), 0); ptr += 2
   print(f"Puzzle 9: Intcode output: {output}")
+
+## 9.5 ##
+def puzzle95():
+  with open('d9_input.txt', 'r') as f: values = [int(v) for v in f.readlines()[0].strip().split(',')]
+  # values = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
+  # values = [1102,34915192,34915192,7,4,7,99,0]
+  # values = [104,1125899906842624,99]
+  values = {idx: val for idx,val in enumerate(values)}
+  def vpos(m_idx): # given a mode index, calculate the proper position for indexing into values
+    m = get(modes, m_idx-1, 0)
+    if   m == 1: return ptr+m_idx                    # immediate mode
+    elif m == 0: return values[ptr+m_idx]            # position mode
+    elif m == 2: return values[ptr+m_idx] + rel_base # relative mode
+
+  ptr = 0
+  rel_base = 0
+  output = []
+  while ptr < len(values.keys()):
+    modes = [int(c) for c in str(values[ptr])[:-2]][::-1]   # all leftmost digits (right-to-left) # rightmost is last param
+    if  (opcode := int(str(values[ptr])[-2:])) == 99: break # two rightmost digits
+    elif opcode == 1: values[vpos(3)] = values.setdefault(vpos(1), 0) + values.setdefault(vpos(2), 0); ptr += 4
+    elif opcode == 2: values[vpos(3)] = values.setdefault(vpos(1), 0) * values.setdefault(vpos(2), 0); ptr += 4
+    elif opcode == 3: values[vpos(1)] = int(input("Input (9.5): [2] ")); ptr += 2
+    elif opcode == 4: output.append(values.setdefault(vpos(1), 0)); ptr += 2
+    elif opcode == 5: ptr = values.setdefault(vpos(2), 0) if values.setdefault(vpos(1), 0) != 0 else ptr+3
+    elif opcode == 6: ptr = values.setdefault(vpos(2), 0) if values.setdefault(vpos(1), 0) == 0 else ptr+3
+    elif opcode == 7: values[vpos(3)] = int(values.setdefault(vpos(1), 0) <  values.setdefault(vpos(2), 0)); ptr += 4
+    elif opcode == 8: values[vpos(3)] = int(values.setdefault(vpos(1), 0) == values.setdefault(vpos(2), 0)); ptr += 4
+    elif opcode == 9: rel_base += values.setdefault(vpos(1), 0); ptr += 2
+  print(f"Puzzle 9.5: Intcode output: {output}")
 
 
 ##########################
@@ -448,3 +478,4 @@ if __name__ == '__main__':
   # puzzle8()
   # puzzle85()
   puzzle9()
+  puzzle95()
