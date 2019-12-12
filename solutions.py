@@ -244,17 +244,156 @@ def puzzle65():
   min_transfers = depth_of_node(smallest_tree, 'YOU') + depth_of_node(smallest_tree, 'SAN')
   print(f"Puzzle 6.5: Minimum orbital transfers: {min_transfers}")
 
+############
+# puzzle 7 #
+############
+## 7 ##
+def puzzle7():
+  def intcode(inputs): # two inputs expected
+    with open('d7_input.txt', 'r') as f: values = [int(v) for v in f.readlines()[0].strip().split(',')]
+    vpos = lambda m_idx: values[ptr+m_idx] if get(modes, m_idx-1, 0) == 0 else ptr+m_idx # given a mode index, calculate the proper position for indexing into values
+    ptr = 0
+    output = 0
+    inputs = (x for x in inputs)
+    while ptr < len(values):
+      modes = [int(c) for c in str(values[ptr])[:-2]][::-1]   # all leftmost digits (right-to-left) # rightmost is last param
+      if  (opcode := int(str(values[ptr])[-2:])) == 99: break # two rightmost digits
+      elif opcode == 1: values[vpos(3)] = values[vpos(1)] + values[vpos(2)]; ptr += 4
+      elif opcode == 2: values[vpos(3)] = values[vpos(1)] * values[vpos(2)]; ptr += 4
+      elif opcode == 3: values[vpos(1)] = next(inputs); ptr += 2 # input signal
+      elif opcode == 4: output = values[vpos(1)]; ptr += 2
+      elif opcode == 5: ptr = values[vpos(2)] if values[vpos(1)] != 0 else ptr+3
+      elif opcode == 6: ptr = values[vpos(2)] if values[vpos(1)] == 0 else ptr+3
+      elif opcode == 7: values[values[ptr+3]] = int(values[vpos(1)] <  values[vpos(2)]); ptr += 4
+      elif opcode == 8: values[values[ptr+3]] = int(values[vpos(1)] == values[vpos(2)]); ptr += 4
+    return output
+
+  signals = {}
+  for phase in itertools.permutations(range(5)):
+    phase_ = "".join((str(n) for n in phase))
+    outA = intcode((phase[0], 0))
+    outB = intcode((phase[1], outA))
+    outC = intcode((phase[2], outB))
+    outD = intcode((phase[3], outC))
+    outE = intcode((phase[4], outD))
+    signals[phase_] = outE
+
+  print(f"Puzzle 7: Maximum thruster signal: {max(signals.values())}")
+
+from queue import Queue, Empty
+from threading import Thread
+## 7.5 ##
+def puzzle75():
+  # def intcode(values=None, output_queue=[], inputs=[]): # two inputs expected
+  def intcode(input_queue, output_queue): # two inputs expected
+    with open('d7_input.txt', 'r') as f: values = [int(v) for v in f.readlines()[0].strip().split(',')]
+    # values = [3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5]
+    # values = [3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10][:]
+
+    vpos = lambda m_idx: values[ptr+m_idx] if get(modes, m_idx-1, 0) == 0 else ptr+m_idx # given a mode index, calculate the proper position for indexing into values
+    ptr = 0
+    # is_first_input = True
+    output = 0
+    # input_queue = (x for x in input_queue)
+    done = False
+    while ptr < len(values):
+      modes = [int(c) for c in str(values[ptr])[:-2]][::-1]   # all leftmost digits (right-to-left) # rightmost is last param
+      if  (opcode := int(str(values[ptr])[-2:])) == 99: done = True; break # two rightmost digits
+      elif opcode == 1: values[vpos(3)] = values[vpos(1)] + values[vpos(2)]; ptr += 4
+      elif opcode == 2: values[vpos(3)] = values[vpos(1)] * values[vpos(2)]; ptr += 4
+
+
+      elif opcode == 3:
+        try:
+          values[vpos(1)] = input_queue.get()
+        except:
+          values[vpos(1)] = output_queue.get(timeout=3)
+        ptr += 2 # input signal
+        # if is_first_input:
+        #   values[vpos(1)] = input_queue[0]
+        #   is_first_input = False
+        # else:
+        #   values[vpos(1)] = input_queue[1]
+        # input_queue[0]
+        # ptr += 2
+
+      elif opcode == 4:
+        output = values[vpos(1)]
+        output_queue.put(output)
+        ptr += 2
+      elif opcode == 5: ptr = values[vpos(2)] if values[vpos(1)] != 0 else ptr+3
+      elif opcode == 6: ptr = values[vpos(2)] if values[vpos(1)] == 0 else ptr+3
+      elif opcode == 7: values[values[ptr+3]] = int(values[vpos(1)] <  values[vpos(2)]); ptr += 4
+      elif opcode == 8: values[values[ptr+3]] = int(values[vpos(1)] == values[vpos(2)]); ptr += 4
+    # output_queue.put(output)
+    #return values[:], output_queue, done
+    return
+
+  signals = {}
+  for phase in itertools.permutations(range(5,10)):
+  # for phase in ((9,8,7,6,5), (9,7,6,5,8), (9,7,8,5,6)):
+    # with open('d7_input.txt', 'r') as f: values = [int(v) for v in f.readlines()[0].strip().split(',')]
+    # values = [3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5]
+    # valsA = values[:]; valsB = values[:]; valsC = values[:]; valsD = values[:]; valsE = values[:]
+
+    # outE, outA, outB, outC, outD = phase # temporary
+
+    # done = False
+
+    inToA = Queue(); inToA.put(phase[0]); inToA.put(0)
+    inToB = Queue(); inToB.put(phase[1])
+    inToC = Queue(); inToC.put(phase[2])
+    inToD = Queue(); inToD.put(phase[3])
+    inToE = Queue(); inToE.put(phase[4])
+
+    outToB = inToB; #Queue()
+    outToC = inToC; #Queue()
+    outToD = inToD; #Queue()
+    outToE = inToE; #Queue()
+    outToA = inToA; #Queue()#; outToA.put(0)
+
+    tA = Thread(target=intcode, args=(inToA, outToB))
+    tB = Thread(target=intcode, args=(inToB, outToC))
+    tC = Thread(target=intcode, args=(inToC, outToD))
+    tD = Thread(target=intcode, args=(inToD, outToE))
+    tE = Thread(target=intcode, args=(inToE, outToA))
+
+    tA.start(); tB.start(); tC.start(); tD.start(); tE.start()
+    tA.join(); tB.join(); tC.join(); tD.join(); tE.join()
+
+    # while not done:
+    #   valsA, _, _    = intcode(valsA, outE, inA)
+    #   valsB, _, _    = intcode(valsB, outA, inB)
+    #   valsC, _, _    = intcode(valsC, outB, inC)
+    #   valsD, _, _    = intcode(valsD, outC, inD)
+    #   valsE, _, done = intcode(valsE, outD, inE)
+
+      # valsA, outA, _    = intcode(valsA, [outE])
+      # valsB, outB, _    = intcode(valsB, [outA])
+      # valsC, outC, _    = intcode(valsC, [outB])
+      # valsD, outD, _    = intcode(valsD, [outC])
+      # valsE, outE, done = intcode(valsE, [outD])
+
+    phase_ = "".join((str(n) for n in phase))
+    signals[phase_] = outToA.get(timeout=3)
+
+  # print(signals)
+
+  print(f"Puzzle 7.5: Maximum feedback thruster signal: {max(signals.values())}")
+
 ##########################
 if __name__ == '__main__':
-  puzzle1()
-  puzzle15()
-  puzzle2()
-  puzzle25()
-  puzzle3()
-  puzzle35()
-  puzzle4()
-  puzzle45()
-  puzzle5()
-  puzzle55()
-  puzzle6()
-  puzzle65()
+  # puzzle1()
+  # puzzle15()
+  # puzzle2()
+  # puzzle25()
+  # puzzle3()
+  # puzzle35()
+  # puzzle4()
+  # puzzle45()
+  # puzzle5()
+  # puzzle55()
+  # puzzle6()
+  # puzzle65()
+  puzzle7()
+  puzzle75()
