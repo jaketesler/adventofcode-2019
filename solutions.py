@@ -280,21 +280,16 @@ def puzzle7():
 
   print(f"Puzzle 7: Maximum thruster signal: {max(signals.values())}")
 
-from queue import Queue, Empty
+from queue import Queue
 from threading import Thread
 ## 7.5 ##
 def puzzle75():
-  # def intcode(values=None, output_queue=[], inputs=[]): # two inputs expected
   def intcode(input_queue, output_queue): # two inputs expected
     with open('d7_input.txt', 'r') as f: values = [int(v) for v in f.readlines()[0].strip().split(',')]
-    # values = [3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5]
-    # values = [3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10][:]
 
     vpos = lambda m_idx: values[ptr+m_idx] if get(modes, m_idx-1, 0) == 0 else ptr+m_idx # given a mode index, calculate the proper position for indexing into values
     ptr = 0
-    # is_first_input = True
     output = 0
-    # input_queue = (x for x in input_queue)
     done = False
     while ptr < len(values):
       modes = [int(c) for c in str(values[ptr])[:-2]][::-1]   # all leftmost digits (right-to-left) # rightmost is last param
@@ -309,13 +304,6 @@ def puzzle75():
         except:
           values[vpos(1)] = output_queue.get(timeout=3)
         ptr += 2 # input signal
-        # if is_first_input:
-        #   values[vpos(1)] = input_queue[0]
-        #   is_first_input = False
-        # else:
-        #   values[vpos(1)] = input_queue[1]
-        # input_queue[0]
-        # ptr += 2
 
       elif opcode == 4:
         output = values[vpos(1)]
@@ -325,32 +313,21 @@ def puzzle75():
       elif opcode == 6: ptr = values[vpos(2)] if values[vpos(1)] == 0 else ptr+3
       elif opcode == 7: values[values[ptr+3]] = int(values[vpos(1)] <  values[vpos(2)]); ptr += 4
       elif opcode == 8: values[values[ptr+3]] = int(values[vpos(1)] == values[vpos(2)]); ptr += 4
-    # output_queue.put(output)
-    #return values[:], output_queue, done
     return
 
   signals = {}
   for phase in itertools.permutations(range(5,10)):
-  # for phase in ((9,8,7,6,5), (9,7,6,5,8), (9,7,8,5,6)):
-    # with open('d7_input.txt', 'r') as f: values = [int(v) for v in f.readlines()[0].strip().split(',')]
-    # values = [3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5]
-    # valsA = values[:]; valsB = values[:]; valsC = values[:]; valsD = values[:]; valsE = values[:]
-
-    # outE, outA, outB, outC, outD = phase # temporary
-
-    # done = False
-
     inToA = Queue(); inToA.put(phase[0]); inToA.put(0)
     inToB = Queue(); inToB.put(phase[1])
     inToC = Queue(); inToC.put(phase[2])
     inToD = Queue(); inToD.put(phase[3])
     inToE = Queue(); inToE.put(phase[4])
 
-    outToB = inToB; #Queue()
-    outToC = inToC; #Queue()
-    outToD = inToD; #Queue()
-    outToE = inToE; #Queue()
-    outToA = inToA; #Queue()#; outToA.put(0)
+    outToB = inToB
+    outToC = inToC
+    outToD = inToD
+    outToE = inToE
+    outToA = inToA
 
     tA = Thread(target=intcode, args=(inToA, outToB))
     tB = Thread(target=intcode, args=(inToB, outToC))
@@ -361,25 +338,62 @@ def puzzle75():
     tA.start(); tB.start(); tC.start(); tD.start(); tE.start()
     tA.join(); tB.join(); tC.join(); tD.join(); tE.join()
 
-    # while not done:
-    #   valsA, _, _    = intcode(valsA, outE, inA)
-    #   valsB, _, _    = intcode(valsB, outA, inB)
-    #   valsC, _, _    = intcode(valsC, outB, inC)
-    #   valsD, _, _    = intcode(valsD, outC, inD)
-    #   valsE, _, done = intcode(valsE, outD, inE)
-
-      # valsA, outA, _    = intcode(valsA, [outE])
-      # valsB, outB, _    = intcode(valsB, [outA])
-      # valsC, outC, _    = intcode(valsC, [outB])
-      # valsD, outD, _    = intcode(valsD, [outC])
-      # valsE, outE, done = intcode(valsE, [outD])
-
     phase_ = "".join((str(n) for n in phase))
     signals[phase_] = outToA.get(timeout=3)
 
-  # print(signals)
-
   print(f"Puzzle 7.5: Maximum feedback thruster signal: {max(signals.values())}")
+
+############
+# puzzle 8 #
+############
+## 8 ##
+def puzzle8():
+  with open('d8_input.txt', 'r') as f: values = [int(l) for l in f.readlines()[0].strip()]
+  # image dims: 25px x 6px x NUM_LAYERS
+  num_layers = int(len(values) / (25*6))
+  pixel_sums_per_layer = []
+  layers = []
+  for layer in range(0, num_layers):
+    layers.append(values[25*6*layer:25*6*(layer+1)])
+
+  fewest_0s_layer = (0, 999) # idx, count
+  for idx, layer in enumerate(layers):
+    num_0s = 0
+    for px in layer:
+      if px == 0: num_0s += 1
+    if fewest_0s_layer[1] > num_0s:
+      fewest_0s_layer = (idx, num_0s)
+
+  num_ones = num_twos = 0
+  for px in layers[fewest_0s_layer[0]]:
+    if px == 1: num_ones += 1
+    if px == 2: num_twos += 1
+
+  print(f"Puzzle 8: 1s X 2s: {num_ones * num_twos}")
+
+## 8.5 ##
+def puzzle85():
+  # image dims: 25px x 6px x NUM_LAYERS
+  with open('d8_input.txt', 'r') as f: values = [int(l) for l in f.readlines()[0].strip()]
+  width, height = (25, 6)
+
+  num_layers = int(len(values) / (width*height))
+  pixel_sums_per_layer = []
+  layers = []
+  for layer in range(0, num_layers): layers.append(values[width*height*layer:width*height*(layer+1)])
+
+  image = layers[0][:]
+  for layer in layers[1:]:
+    for idx, px in enumerate(layer):
+      if image[idx] == 2: image[idx] = px # transparent -> replace
+
+  image_out = [[], [], [], [], [], []]
+  for h in range(height):
+    for w in range(width):
+      image_out[h].append(image[(width*h)+w])
+    image_out[h] = "".join('X' if p else '-' for p in image_out[h])
+
+  print("Puzzle 8.5: Image contents: \n{}".format('\n'.join(image_out)))
 
 ##########################
 if __name__ == '__main__':
@@ -395,5 +409,7 @@ if __name__ == '__main__':
   # puzzle55()
   # puzzle6()
   # puzzle65()
-  puzzle7()
-  puzzle75()
+  # puzzle7()
+  # puzzle75()
+  puzzle8()
+  puzzle85()
