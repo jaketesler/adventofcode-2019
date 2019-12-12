@@ -398,216 +398,31 @@ def puzzle95():
 ############
 # puzzle 10 #
 ############
-import copy
 ## 10 ##
 def puzzle10():
   with open('d10_input.txt', 'r') as f: asteroids = [[p for p in v.strip()] for v in f.readlines()]
-  # asteroids = [
-  #   [".","#",".",".","#"],
-  #   [".",".",".",".","."],
-  #   ["#","#","#","#","#"],
-  #   [".",".",".",".","#"],
-  #   [".",".",".","#","#"]]
-
-  # asteroid(X,Y) = asteroids[Y][X]
-  # print(asteroids)
-  hit_arr = copy.deepcopy(asteroids[:])
-
   is_asteroid = lambda v: v == '#'
-
   def can_see(origin, dest):
-    oX, oY = origin # 3,4
-    destX, destY = dest # 1,0
-    stepX = (destX-oX) # 2
-    stepY = (destY-oY) # 4
-    # divisor = int(stepY/max(abs(stepX), 1)) # 2
-    # if stepX == 0:
-    #   divisor = abs(int(stepY))
-    # else:
-    #   divisor = abs(int(stepY/stepX)) # 2
+    oX, oY = origin
+    destX, destY = dest
+    stepX = (destX-oX)
+    stepY = (destY-oY)
     divisor = math.gcd(stepX, stepY)
-
-    # print(origin, dest, (stepX, stepY), divisor)
-
-    if divisor == 0:
-      minStepX = stepX
-    else:
-      minStepX = stepX/divisor # 1
-
-    if divisor == 0:
-      minStepY = stepY
-    else:
-      minStepY = stepY/divisor # 2
-    # asts: 2,2, 1,0
-    # minStepX = math.gcd(stepX, divisor)*divisor
-    # minStepY = math.gcd(stepY, divisor)*divisor
-
-    # if destY > oY:
-    #   if destX > oX: # destination is down-right of origin (+x,+y)
-    #     rng = ((int(oX+(minStepX*step)), int(oY+(minStepY*step))) for step in range(len(asteroids[0]), 0, -1))
-    #   else: # destination is down-left of origin (-x,+y)
-    #     rng = ((int(oX+(minStepX*step)), int(oY+(minStepY*step))) for step in range(len(asteroids[0]), 0, -1))
-    # else:
-    #   if destX > oX: # destination is up-right of origin (+x,-y)
-    #     rng = ((int(oX+(minStepX*step)), int(oY+(minStepY*step))) for step in range(len(asteroids[0]), 0, -1))
-    #   else: # destination is up-left of origin (-x,-y)
-    #     rng = ((int(oX+(minStepX*step)), int(oY+(minStepY*step))) for step in range(len(asteroids[0]), 0, -1))
-    #     # rng = ((int(oX+(minStepX*step)), int(oY+(minStepY*step))) for step in range(len(asteroids[0]), 0, -1))
-    rng = ((int(oX+(minStepX*step)), int(oY+(minStepY*step))) for step in range(len(asteroids[0]), 0, -1))
-
-    # for step in range(-len(asteroids[0]), len(asteroids[0])):
-    for x,y in rng:
-      # x = int(oX-(minStepX*step))
-      # y = int(oY-(minStepY*step))
-      if y >= len(asteroids) or x >= len(asteroids[0]): continue
-      if y < 0 or x < 0: continue
+    minStepX = stepX/(1 if divisor == 0 else divisor)
+    minStepY = stepY/(1 if divisor == 0 else divisor)
+    for x,y in ((int(oX+(minStepX*step)), int(oY+(minStepY*step))) for step in range(len(asteroids[0]), 0, -1)):
+      if y < 0 or x < 0 or y >= len(asteroids) or x >= len(asteroids[0]): continue
       if y == oY and x == oX: continue
-      if y == destY and x == destX: break
-
-      # if oX>=destX and oY>=destY and x<=destX and y<=destY: break #dest is up-left, so we're moving upleftward
-      # if oX<=destX and oY>=destY and x>=destX and y<=destY: break #dest is up-right
-      # if oX>=destX and oY<=destY and x<=destX and y>=destY: break #dest is dn-left
-      # if oX<=destX and oY<=destY and x>=destX and y>=destY: break #dest is dn-right
-
-      # print(f"{(x,y)} | {origin=}, {dest=}, step={(stepX, stepY)}")
-      # print(x,y)
+      if y == destY and x == destX: return True
       if is_asteroid(asteroids[y][x]): return False
-    return True
-
-  # print(can_see((3,4),(1,0)))
-  # print(can_see((3,4),(2,2)))
-  # exit()
-
-
   ast_counts = {}
-
-  for y in range(0, len(asteroids)):
-    for x in range(0, len(asteroids[0])):
-      if not is_asteroid(asteroids[y][x]):
-        hit_arr[y][x] = 0
-        continue
-      num_hits = 0
-
-      # for dy in range(-len(asteroids), len(asteroids)):
-      for dy in range(0, len(asteroids)):
-        was_asteroid = False
-        # for dx in range(-len(asteroids[0]), len(asteroids[0])):
-        for dx in range(0, len(asteroids[0])):
-          # if (dy+y) == y and (dx+x) == x: continue # dont count ourselves
-          # if (dy+y) < 0 or (dx+x) < 0: continue
-
-          if dy == y and dx == x: continue
-          dest_val = 0
-
-          try:
-            # dest_val = asteroids[dy+y][dx+x]
-            dest_val = asteroids[dy][dx]
-          except:
-            continue
-
-          # if is_asteroid(dest_val):
-          if is_asteroid(dest_val) and can_see((x,y),(dx,dy)):
-            # print(f"({x},{y}) -> HIT ({dx+x},{dy+y}) | ({dx=:02},{dy=:02})")
-            # print(f"({x},{y}) -> HIT ({dx},{dy})")
-            num_hits += 1
-            was_asteroid = True
-            # break
-        # if was_asteroid: break
-
-      ast_counts[f"{x}_{y}"] = num_hits
-      hit_arr[y][x] = num_hits
-
-      #####
-      # for dy in range(0, len(asteroids)): # quadrant IV
-      #   was_asteroid = False
-      #   for dx in range(0, len(asteroids[0])):
-      #     if (dy+y) == y and (dx+x) == x: continue # dont count ourselves
-      #     if (dy+y) < 0 or (dx+x) < 0: break
-      #     if (dy+y) >= len(asteroids) or (dx+x) >= len(asteroids[0]): break
-      #     # if (dy+y) < -len(asteroids) or (dx+x) < -len(asteroids[0]): continue
-      #     dest_val = 0
-
-      #     try: dest_val = asteroids[dy+y][dx+x]
-      #     except: continue
-
-      #     if is_asteroid(dest_val):
-      #       print(f"({x},{y}) -> HIT ({dx+x},{dy+y}) | ({dx=:02},{dy=:02})")
-      #       num_hits += 1
-      #       was_asteroid = True
-      #       # break # break after X
-      #   # if was_asteroid: break # break after Y
-
-      # for dy in range(0, len(asteroids)): # quadrant III
-      #   was_asteroid = False
-      #   for dx in range(0, -len(asteroids[0]), -1):
-      #     if (dy+y) == y and (dx+x) == x: continue # dont count ourselves
-      #     if (dy+y) < 0 or (dx+x) < 0: break
-      #     if (dy+y) >= len(asteroids) or (dx+x) >= len(asteroids[0]): break
-      #     # if (dy+y) < -len(asteroids) or (dx+x) < -len(asteroids[0]): continue
-      #     dest_val = 0
-
-      #     try: dest_val = asteroids[dy+y][dx+x]
-      #     except: continue
-
-      #     if is_asteroid(dest_val):
-      #       print(f"({x},{y}) -> HIT ({dx+x},{dy+y}) | ({dx=:02},{dy=:02})")
-      #       num_hits += 1
-      #       was_asteroid = True
-      #       # break # break after X
-      #   # if was_asteroid: break # break after Y
-
-      # for dy in range(0, -len(asteroids), -1): # quadrant I
-      #   was_asteroid = False
-      #   for dx in range(0, len(asteroids[0])):
-      #     if (dy+y) == y and (dx+x) == x: continue # dont count ourselves
-      #     if (dy+y) < 0 or (dx+x) < 0: break
-      #     if (dy+y) >= len(asteroids) or (dx+x) >= len(asteroids[0]): break
-      #     # if (dy+y) < -len(asteroids) or (dx+x) < -len(asteroids[0]): continue
-      #     dest_val = 0
-      #     # print(dx,dy)
-
-      #     try: dest_val = asteroids[dy+y][dx+x]
-      #     except: continue
-
-      #     if is_asteroid(dest_val):
-      #       print(f"({x},{y}) -> HIT ({dx+x},{dy+y}) | ({dx=:02},{dy=:02})")
-      #       num_hits += 1
-      #       was_asteroid = True
-      #       # break # break after X
-      #   # if was_asteroid: break # break after Y
-
-      # for dy in range(0, -len(asteroids), -1): # quadrant II
-      #   was_asteroid = False
-      #   for dx in range(0, -len(asteroids[0]), -1):
-      #     if (dy+y) == y and (dx+x) == x: continue # dont count ourselves
-      #     if (dy+y) < 0 or (dx+x) < 0: break
-      #     if (dy+y) >= len(asteroids) or (dx+x) >= len(asteroids[0]): break
-      #     # if (dy+y) < -len(asteroids) or (dx+x) < -len(asteroids[0]): continue
-      #     dest_val = 0
-
-      #     try: dest_val = asteroids[dy+y][dx+x]
-      #     except: continue
-
-      #     if is_asteroid(dest_val):
-      #       print(f"({x},{y}) -> HIT ({dx+x},{dy+y}) | ({dx=:02},{dy=:02})")
-      #       num_hits += 1
-      #       was_asteroid = True
-      #       # break # break after X
-      #   # if was_asteroid: break # break after Y
-      #####
-
-      # ast_counts[f"{x}_{y}"] = num_hits
-      # hit_arr[y][x] = num_hits
-
-  # s = ""
-  # for y in range(0, len(asteroids)):
-  #   for x in range(0, len(asteroids[0])):
-  #     s += asteroids[y][x]
-  #   s += "\n"
-
-  print()
-  print(''.join(["{}\n".format(x) for x in asteroids]))
-  print(''.join(["{}\n".format(["{:01}".format(p) for p in x]) for x in hit_arr]))
+  for x,y in itertools.product(range(0, len(asteroids[0])), range(0, len(asteroids))):
+    if not is_asteroid(asteroids[y][x]): continue
+    num_hits = 0
+    for dx,dy in itertools.product(range(0, len(asteroids[0])), range(0, len(asteroids))):
+      if dy == y and dx == x: continue
+      if is_asteroid(asteroids[dy][dx]) and can_see((x,y),(dx,dy)): num_hits += 1
+    ast_counts[f"{x}_{y}"] = num_hits
   print(f"Puzzle 10: Maximum detection from an asteroid: {max(ast_counts.values())}")
 
 ##########################
