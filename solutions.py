@@ -426,24 +426,88 @@ def puzzle10():
       for dx,dy in itertools.product(range(0, len(asteroids[0])), range(0, len(asteroids))))
   print(f"Puzzle 10: Maximum detection from an asteroid: {max(ast_counts.values())}")
 
+############
+# puzzle 11 #
+############
+## 11 ##
+def puzzle11():
+  with open('d11_input.txt', 'r') as f: values = {idx: int(v) for idx,v in enumerate(f.readlines()[0].strip().split(','))}
+  def vpos(m_idx): # given a mode index, calculate the proper position for indexing into values
+    m = get(modes, m_idx-1, 0)
+    if   m == 1: return ptr+m_idx                    # immediate mode
+    elif m == 0: return values[ptr+m_idx]            # position mode
+    elif m == 2: return values[ptr+m_idx] + rel_base # relative mode
+
+  robot_plane = {}
+  cur_position = [0,0]
+  cur_direction = 0 # U/D/L/R 0/1/2/3
+
+  complete_directions = True # start true so first time is false
+  cur_color = 99
+
+  ptr = 0
+  rel_base = 0
+  output = []
+  while ptr < len(values.keys()):
+    modes = [int(c) for c in str(values[ptr])[:-2]][::-1]   # all leftmost digits (right-to-left) # rightmost is last param
+    if  (opcode := int(str(values[ptr])[-2:])) == 99: break # two rightmost digits
+    elif opcode == 1: values[vpos(3)] = values.setdefault(vpos(1), 0) + values.setdefault(vpos(2), 0); ptr += 4
+    elif opcode == 2: values[vpos(3)] = values.setdefault(vpos(1), 0) * values.setdefault(vpos(2), 0); ptr += 4
+    elif opcode == 3:
+      values[vpos(1)] = robot_plane.setdefault(f"{cur_position[0]}_{cur_position[1]}", 0)
+      ptr += 2
+    elif opcode == 4:
+      out = values.setdefault(vpos(1), 0) # first input is 0 (black panel)
+      complete_directions = not complete_directions
+      if not complete_directions:
+        cur_color = out
+      else:
+        direction = out
+
+        robot_plane[f"{cur_position[0]}_{cur_position[1]}"] = cur_color
+        if direction: # turn right 90
+          if   cur_direction == 0: cur_direction = 3 # up -> right
+          elif cur_direction == 1: cur_direction = 2 # down -> left
+          elif cur_direction == 2: cur_direction = 0 # left -> up
+          elif cur_direction == 3: cur_direction = 1 # right -> down
+        else: # turn left 90
+          if   cur_direction == 0: cur_direction = 2 # up -> left
+          elif cur_direction == 1: cur_direction = 3 # down -> right
+          elif cur_direction == 2: cur_direction = 1 # left -> down
+          elif cur_direction == 3: cur_direction = 0 # right -> up
+
+        if   cur_direction == 0: cur_position[1] += 1 # up 1
+        elif cur_direction == 1: cur_position[1] -= 1 # down 1
+        elif cur_direction == 2: cur_position[0] -= 1 # left 1
+        elif cur_direction == 3: cur_position[0] += 1 # right 1
+      ptr += 2
+    elif opcode == 5: ptr = values.setdefault(vpos(2), 0) if values.setdefault(vpos(1), 0) != 0 else ptr+3
+    elif opcode == 6: ptr = values.setdefault(vpos(2), 0) if values.setdefault(vpos(1), 0) == 0 else ptr+3
+    elif opcode == 7: values[vpos(3)] = int(values.setdefault(vpos(1), 0) <  values.setdefault(vpos(2), 0)); ptr += 4
+    elif opcode == 8: values[vpos(3)] = int(values.setdefault(vpos(1), 0) == values.setdefault(vpos(2), 0)); ptr += 4
+    elif opcode == 9: rel_base += values.setdefault(vpos(1), 0); ptr += 2
+
+  print(f"Puzzle 11: Number of panels painted: {len(robot_plane.keys())}")
+
 ##########################
 if __name__ == '__main__':
-  puzzle1()
-  puzzle15()
-  puzzle2()
-  puzzle25()
-  puzzle3()
-  puzzle35()
-  puzzle4()
-  puzzle45()
-  puzzle5()
-  puzzle55()
-  puzzle6()
-  puzzle65()
-  puzzle7()
-  puzzle75()
-  puzzle8()
-  puzzle85()
-  puzzle9()
-  puzzle95()
-  puzzle10()
+  # puzzle1()
+  # puzzle15()
+  # puzzle2()
+  # puzzle25()
+  # puzzle3()
+  # puzzle35()
+  # puzzle4()
+  # puzzle45()
+  # puzzle5()
+  # puzzle55()
+  # puzzle6()
+  # puzzle65()
+  # puzzle7()
+  # puzzle75()
+  # puzzle8()
+  # puzzle85()
+  # puzzle9()
+  # puzzle95()
+  # puzzle10()
+  puzzle11()
